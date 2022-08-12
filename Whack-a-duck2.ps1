@@ -5,31 +5,16 @@ Team: Capt Dorrough, Lt Monteith, Lt Voyer, Lt Walters
 #>
 
 #Global Variables
+$guesserCounter = 0
 $duckLocation = -1
 $counter = 0
+$counterEX = 0
 [boolean]$stopPlay = $false
+$placesDuckBeen = @()
 
-#Display Gif
-# Create runspace
-$runspace = [RunspaceFactory]::CreateRunspace()
-$runspace.Open()
-
-# Add script and run asynchronously
-$runspace.CreatePipeline{
-
-    Add-Type -AssemblyName System.Windows.Forms
-
-    $image = [Drawing.Bitmap]"C:\Users\carso\Documents\Powershell Proj\duck-fly.gif"
-
-    $pictureBox = [Windows.Forms.PictureBox]@{ Dock = "Fill"; Image = $image }
-    $form = [Windows.Forms.Form]@{ Size = $image.Size; FormBorderStyle = "None" }
-    $form.Controls.Add($pictureBox)
-
-    $form.ShowDialog()
-    $form.Controls.Remove()
-
-}.InvokeAsync()
-
+#Screen Color -Goose 
+$Host.UI.RawUI.BackgroundColor = 'Green'
+$Host.UI.RawUI.ForegroundColor = 'Black'
 
 #Function to start game with options to read rules, start game, or exit game
 function WhackADuck {
@@ -39,15 +24,19 @@ function WhackADuck {
    [int]$decision = Read-Host "Please enter your selection"
    if ($decision -eq 1) {
     while ($Global:counter -lt 3 -and $stopPlay -eq $false) {
+        if ($Global:counterEX % 8 -eq 0){
+            $Global:counterEX = 0
+            $Global:placesDuckBeen = @()
+        }
         rngarray
         User
     }
     write "Congratulations! Dicky the Duck is now stuck in the muck, you win!"
     sleep 3
-    cls
+    [int]$successRate = 3/$Global:guesserCounter * 100
+    Write-Output "You've made $Global:guesserCounter total guesses. You had a success rate of $successRate %"
    }
    elseif ($decision -eq 2) {
-    cls
     [int]$rulesRead = 0
     while ($rulesRead -eq 0) {
     write "`nRules of Whack-a-Duck`n"
@@ -67,16 +56,19 @@ function WhackADuck {
 }
  
 function rngarray {
-    $arr1= @($false, $false, $false, $false, $false, $false, $false, $false, $false)
-    $Global:duckLocation = 1, 2, 3, 4, 5, 6, 7, 8, 9 | Get-Random
-    foreach ($i in $arr1) {
-        if ($userinput -eq $ducklocation) {
-            $arr1[$i] = $true
+    do{
+    [int]$Global:duckLocation = 1..9 | Get-Random
+    foreach ($num in $Global:placesDuckBeen){
+        if ($num -eq $duckLocation){
+            continue
         }
-        else {
-            $arr1[$i] = $false
+        else{
+            break
         }
     }
+    break
+    }while(1 -eq 1)
+
 }
 
 #Function to check user input with where duck is in array and return answer
@@ -86,20 +78,33 @@ function decision($UserInput, $duckLocation) {
 
 
 function User {
-    cls
     displaybox
     [int]$numInput = read-host "`nGuess a number between 1 and 9 or enter 0 to Exit"
     if ($numInput -ge 1 -and $numInput -le 9) {
+        $Global:guesserCounter++
+        $Global:counterEX++
         if (decision $numInput $duckLocation) {
-            cls
             displayDuckBox $numInput
+            #place bong sound here
+            Add-Type -AssemblyName presentationCore
+            $bong = New-Object System.Windows.Media.MediaPlayer
+            $bong.Open('C:\Users\carso\Documents\Powershell Proj\Duck Wack\taco_bell.mp3')
+            $bong.Play()
             write "`nYou got Dicky the Duck!"
             $Global:counter++
             write "You've hit Dicky the Duck $Global:counter times"
-            sleep 2
+            $Global:placesDuckBeen = @()
         }
         else {
             write "`nGet Ducked!"
+            $Global:placesDuckBeen += $duckLocation
+            #place nope sound here
+            Add-Type -AssemblyName presentationCore
+            $nope = New-Object System.Windows.Media.MediaPlayer
+            $nope.Open('C:\Users\carso\Documents\Powershell Proj\Duck Wack\nope.mp3')
+            $nope.Play()
+            Write-Output "LOL YOU WERE WRONG DUCKY WAS ACTUALLY HERE"
+            displayDuckBox ($duckLocation)
         }
     }
     elseif ($numInput -eq 0) {
@@ -108,7 +113,6 @@ function User {
     else {
          write-host  "You're Ducked! Try Again!"
     } 
-    sleep 1
 }  
 
 function displayDuckBox ($numInput) {
