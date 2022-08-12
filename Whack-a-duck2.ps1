@@ -5,7 +5,6 @@ Team: Capt Dorrough, Lt Monteith, Lt Voyer, Lt Walters
 #>
 
 #Global Variables
-$guesserCounter = 0
 $duckLocation = -1
 $counter = 0
 [boolean]$stopPlay = $false
@@ -23,8 +22,10 @@ function WhackADuck {
     }
     write "Congratulations! Dicky the Duck is now stuck in the muck, you win!"
     sleep 3
+    cls
    }
    elseif ($decision -eq 2) {
+    cls
     [int]$rulesRead = 0
     while ($rulesRead -eq 0) {
     write "`nRules of Whack-a-Duck`n"
@@ -63,15 +64,18 @@ function decision($UserInput, $duckLocation) {
 
 
 function User {
+    cls
     displaybox
     [int]$numInput = read-host "`nGuess a number between 1 and 9 or enter 0 to Exit"
     if ($numInput -ge 1 -and $numInput -le 9) {
-        $Global:guesserCounter++
+        $duckLocation = 7
         if (decision $numInput $duckLocation) {
+            cls
             displayDuckBox $numInput
             write "`nYou got Dicky the Duck!"
             $Global:counter++
             write "You've hit Dicky the Duck $Global:counter times"
+            sleep 2
         }
         else {
             write "`nGet Ducked!"
@@ -83,6 +87,7 @@ function User {
     else {
          write-host  "You're Ducked! Try Again!"
     } 
+    sleep 1
 }  
 
 function displayDuckBox ($numInput) {
