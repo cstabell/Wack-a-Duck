@@ -9,6 +9,28 @@ $duckLocation = -1
 $counter = 0
 [boolean]$stopPlay = $false
 
+#Display Gif
+# Create runspace
+$runspace = [RunspaceFactory]::CreateRunspace()
+$runspace.Open()
+
+# Add script and run asynchronously
+$runspace.CreatePipeline{
+
+    Add-Type -AssemblyName System.Windows.Forms
+
+    $image = [Drawing.Bitmap]"C:\Users\carso\Documents\Powershell Proj\duck-fly.gif"
+
+    $pictureBox = [Windows.Forms.PictureBox]@{ Dock = "Fill"; Image = $image }
+    $form = [Windows.Forms.Form]@{ Size = $image.Size; FormBorderStyle = "None" }
+    $form.Controls.Add($pictureBox)
+
+    $form.ShowDialog()
+    $form.Controls.Remove()
+
+}.InvokeAsync()
+
+
 #Function to start game with options to read rules, start game, or exit game
 function WhackADuck {
    cls
@@ -68,7 +90,6 @@ function User {
     displaybox
     [int]$numInput = read-host "`nGuess a number between 1 and 9 or enter 0 to Exit"
     if ($numInput -ge 1 -and $numInput -le 9) {
-        $duckLocation = 7
         if (decision $numInput $duckLocation) {
             cls
             displayDuckBox $numInput
